@@ -1,0 +1,27 @@
+// 成績表 by Codex
+
+$students: {"Alice": 82, "Bob": 67, "Carol": 91};
+$names: ["Alice", "Bob", "Carol"];
+
+function grade: $score {
+    if ($score >= 80) {
+        return "A";
+    } elseif ($score >= 70) {
+        return "B";
+    } else {
+        return "C";
+    }
+}
+
+putln("== Grade Report ==");
+
+$sum: 0;
+for ($name : $names) {
+    $score: $students[$name];
+    $sum: $sum + $score;
+    putln($name + " => " + grade($score));
+}
+
+$avg: $sum / length($names);
+putln("Average:");
+putln($avg);

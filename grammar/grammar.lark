@@ -1,0 +1,81 @@
+?start: statement+
+
+?statement: assign ";"
+         | import_stmt ";"
+         | func_def
+         | if_stmt
+         | while_stmt
+         | for_stmt
+         | break_stmt ";"
+         | continue_stmt ";"
+         | return_stmt ";"
+         | expr ";"
+
+assign: "$" NAME ":" expr                    -> assign_var
+      | "$" NAME "[" expr "]" ":" expr      -> assign_index
+import_stmt: "load" STRING ["->" NAME]
+func_def: "function" NAME ":" [params] block
+params: "$" NAME ("," "$" NAME)*
+if_stmt: "if" "(" expr ")" block elseif_clause* ["else" block]
+elseif_clause: "elseif" "(" expr ")" block
+while_stmt: "while" "(" expr ")" block
+for_stmt: "for" "(" "$" NAME ":" expr ")" block
+break_stmt: "break"
+continue_stmt: "continue"
+return_stmt: "return" [expr]
+block: "{" statement* "}"
+
+?expr: logical_or
+
+?logical_or: logical_or "|" logical_and -> or_op
+           | logical_and
+
+?logical_and: logical_and "&" comparison -> and_op
+            | comparison
+
+?comparison: comparison "==" arith -> eq
+           | comparison "!=" arith -> ne
+           | comparison "<=" arith -> le
+           | comparison "<" arith -> lt
+           | comparison ">=" arith -> ge
+           | comparison ">" arith -> gt
+           | arith
+
+?arith: arith "+" term   -> add
+      | arith "-" term   -> sub
+      | term
+
+?term: term "*" factor   -> mul
+     | term "/" factor   -> div
+     | factor
+
+?factor: NUMBER        -> number
+       | STRING        -> string
+       | "True"        -> true
+       | "False"       -> false
+       | "(" ")"       -> tuple_empty
+       | "(" expr "," [args] ")" -> tuple_literal
+       | "[" [args] "]" -> list_literal
+       | "{" [dict_items] "}" -> dict_literal
+       | NAME "." NAME "(" [args] ")" -> module_func_call
+       | NAME "." "$" NAME -> module_var
+       | NAME "(" [args] ")"  -> func_call
+       | "$" NAME "[" expr "]" -> var_index
+       | "$" NAME     -> var
+       | "!" factor    -> not_op
+       | "-" factor   -> neg
+       | "(" expr ")"  -> grouped
+
+args: expr ("," expr)*
+dict_items: dict_item ("," dict_item)*
+dict_item: expr ":" expr
+
+%import common.CNAME -> NAME
+%import common.NUMBER
+%import common.ESCAPED_STRING -> STRING
+%import common.WS
+
+%ignore WS
+%ignore /\/\/[^\n]*/   // single-line comments
+%ignore /<\*[\s\S]*?\*>/   // multi-line comments
+    
